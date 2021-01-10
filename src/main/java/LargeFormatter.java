@@ -1,4 +1,5 @@
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class LargeFormatter {
 
@@ -57,14 +58,14 @@ public class LargeFormatter {
             }
 
             suffixSize++;
-            number = number.divide(THOUSAND);
+            number = number.divide(THOUSAND, 0 , RoundingMode.HALF_UP);
         }
 
         if (scientific) {
             int exp = 3 * suffixSize;
             while (number.compareTo(TEN) >= 0) {
                 exp++;
-                number = number.divide(TEN);
+                number = number.divide(TEN,  0 , RoundingMode.HALF_UP);
             }
             return String.format("%.2fE%d", number, exp);
         } else {

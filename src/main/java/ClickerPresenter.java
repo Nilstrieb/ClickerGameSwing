@@ -5,7 +5,7 @@ public class ClickerPresenter {
 
     public static final int TARGET_FPS = 30;
 
-    public static final int MAX_UPGRADE_FACTOR = 100000;
+    public static final int MAX_UPGRADE_FACTOR = 1000;
 
     private final ClickerView clickerView;
     private final ClickerModel clickerModel;

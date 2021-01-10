@@ -1,6 +1,10 @@
+import org.w3c.dom.ls.LSOutput;
+
 import javax.swing.*;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.Arrays;
 
 public class UpgradePanel extends JPanel {
 
@@ -26,7 +30,7 @@ public class UpgradePanel extends JPanel {
     private final ClickerPresenter presenter;
     private final LargeFormatter lf = new LargeFormatter();
 
-    private String upgradeButtonText = "";
+    private BigDecimal upgradeCost = BigDecimal.ZERO;
 
     public UpgradePanel(String name, double baseCost, double costMultiplier, double baseGain, ClickerPresenter presenter) {
         add(mainPanel);
@@ -54,7 +58,8 @@ public class UpgradePanel extends JPanel {
     }
 
     public void refresh() {
-        upgradeButton.setEnabled(presenter.getNicolas().compareTo(calculateExp(cost, costMultiplier, presenter.getUpgradeFactor())) >= 0);
+
+        upgradeButton.setEnabled(presenter.getNicolas().compareTo(upgradeCost) >= 0);
 
         long currentTime = System.currentTimeMillis();
         if (gain.compareTo(BigDecimal.ZERO) > 0) {
@@ -70,9 +75,7 @@ public class UpgradePanel extends JPanel {
 
                 if (gain.compareTo(inverseFrameDeltaTime) > 0) {
                     //normal: dt/tpn   inverse: gain/idt
-                    System.out.println(inverseFrameDeltaTime + " " + gain);
                     BigDecimal missedNicolas = gain.divide(inverseFrameDeltaTime, 0, RoundingMode.HALF_UP); /*frameDeltaTime / timePerNicolas*/
-                    System.out.println(missedNicolas);
                     presenter.addNicolas(missedNicolas);
                 } else {
                     presenter.addNicolas(1);
@@ -85,7 +88,10 @@ public class UpgradePanel extends JPanel {
         levelLabel.setText("Level: " + level);
         gainLabel.setText(lf.formatBigNumber(gain) + " Nicolas");
 
-        upgradeButton.setText(upgradeButtonText);
+        upgradeButton.setText(String.format("%,dx Upgrade: %s Nicolas",
+                presenter.getUpgradeFactor(), lf.formatBigNumber(upgradeCost)));
+
+
     }
 
     private BigDecimal calculateExp(BigDecimal c, BigDecimal fac, long amount) {
@@ -105,7 +111,15 @@ public class UpgradePanel extends JPanel {
     }
 
     public void recalculateUpgradeButtonText() {
-        upgradeButtonText = String.format("%,dx Upgrade: %s Nicolas",
-                presenter.getUpgradeFactor(), lf.formatBigNumber(calculateExp(cost, costMultiplier, presenter.getUpgradeFactor())));
+        Thread t = new Thread(() -> {
+            setUpgradeCost(calculateExp(cost, costMultiplier, presenter.getUpgradeFactor()));
+        });
+        t.start();
+    }
+
+    public void setUpgradeCost(BigDecimal cost) {
+        synchronized (this) {
+            upgradeCost = cost;
+        }
     }
 }
