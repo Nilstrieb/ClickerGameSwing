@@ -1,4 +1,6 @@
 import javax.swing.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class UpgradePanel extends JPanel {
 
@@ -11,11 +13,11 @@ public class UpgradePanel extends JPanel {
 
     private String name;
 
-    private final double costMultiplier;
+    private final BigDecimal costMultiplier;
     private final double baseGain;
 
-    private double cost;
-    private double gain = 0;
+    private BigDecimal cost;
+    private BigDecimal gain = BigDecimal.ZERO;
     private int level;
 
     private long lastAddedTimeStamp = 0;
@@ -24,12 +26,14 @@ public class UpgradePanel extends JPanel {
     private final ClickerPresenter presenter;
     private final LargeFormatter lf = new LargeFormatter();
 
+    private String upgradeButtonText = "";
+
     public UpgradePanel(String name, double baseCost, double costMultiplier, double baseGain, ClickerPresenter presenter) {
         add(mainPanel);
 
         this.name = name;
-        this.cost = baseCost;
-        this.costMultiplier = costMultiplier;
+        this.cost = new BigDecimal(baseCost);
+        this.costMultiplier = BigDecimal.valueOf(costMultiplier);
         this.baseGain = baseGain;
         this.presenter = presenter;
 
@@ -38,62 +42,70 @@ public class UpgradePanel extends JPanel {
         upgradeButton.addActionListener(e -> upgrade(presenter.getUpgradeFactor()));
     }
 
-    public void upgrade(double amount) {
+    public void upgrade(int amount) {
 
         presenter.removeNicolas(calculateExp(cost, costMultiplier, amount));
-        gain += baseGain * amount;
+        gain = gain.add(new BigDecimal(baseGain * amount));
         level += amount;
 
-        cost *= Math.pow(costMultiplier, amount);
+        cost = cost.multiply(costMultiplier.pow(amount));
+
+        recalculateUpgradeButtonText();
     }
 
     public void refresh() {
-        upgradeButton.setEnabled(presenter.getNicolas() >= calculateExp(cost, costMultiplier, presenter.getUpgradeFactor()));
+        upgradeButton.setEnabled(presenter.getNicolas().compareTo(calculateExp(cost, costMultiplier, presenter.getUpgradeFactor())) >= 0);
 
-        //should nicolas be added?
         long currentTime = System.currentTimeMillis();
-        long lastAddDeltaTime = currentTime - lastAddedTimeStamp;
-        double timePerNicolas = 1 / gain * 1000;
+        if (gain.compareTo(BigDecimal.ZERO) > 0) {
+            //should nicolas be added?
+            double lastAddDeltaTime = currentTime - lastAddedTimeStamp;
+            double inverseLastAddDeltaTime = 1 / (lastAddDeltaTime / 1000);
 
-        if (timePerNicolas < lastAddDeltaTime) {
-            //add nicolas
-            long frameDeltaTime = currentTime - lastFrameTimeStamp;
+            //gain=2 tpn=0.5 ladt=1000 laps=1
+            if (gain.compareTo(BigDecimal.valueOf(inverseLastAddDeltaTime)) > 0) {
+                double frameDeltaTime = currentTime - lastFrameTimeStamp;
+                BigDecimal inverseFrameDeltaTime = BigDecimal.valueOf(1 / (frameDeltaTime / 1000));
+                lastAddedTimeStamp = currentTime;
 
-            System.out.printf("tpn=%.2f ladt=%d Δt=%d", timePerNicolas, lastAddDeltaTime, frameDeltaTime);
-            lastAddedTimeStamp = currentTime;
-
-
-            if (timePerNicolas < frameDeltaTime) {
-                double missedNicolas = frameDeltaTime / timePerNicolas;
-                System.out.printf(" FN mn=%.2f gain=%.2f add=%.2f", missedNicolas, gain, missedNicolas);
-                presenter.addNicolas(missedNicolas);
-            } else {
-                presenter.addNicolas(1);
+                if (gain.compareTo(inverseFrameDeltaTime) > 0) {
+                    //normal: dt/tpn   inverse: gain/idt
+                    System.out.println(inverseFrameDeltaTime + " " + gain);
+                    BigDecimal missedNicolas = gain.divide(inverseFrameDeltaTime, 0, RoundingMode.HALF_UP); /*frameDeltaTime / timePerNicolas*/
+                    System.out.println(missedNicolas);
+                    presenter.addNicolas(missedNicolas);
+                } else {
+                    presenter.addNicolas(1);
+                }
             }
-
-            System.out.print("\n");
         }
+
         lastFrameTimeStamp = currentTime;
 
         levelLabel.setText("Level: " + level);
         gainLabel.setText(lf.formatBigNumber(gain) + " Nicolas");
 
-        upgradeButton.setText(String.format("%,.0fx Upgrade: %s Nicolas",
-                presenter.getUpgradeFactor(), lf.formatBigNumber(calculateExp(cost, costMultiplier, presenter.getUpgradeFactor()))));
+        upgradeButton.setText(upgradeButtonText);
     }
 
-    private double calculateExp(double c, double fac, double amount) {
+    private BigDecimal calculateExp(BigDecimal c, BigDecimal fac, long amount) {
         //x10 cost = c + c*x + c*x*x + c*x*x*x... = c * x^1 + c*x^2 + c*x^3 + c*x^4 + c*x^5... =
         // c * (x^0 + x^1 + x^2 + x^3...)
         //new cost = c * x^amount
-        double result = 0;
+        BigDecimal result = BigDecimal.ZERO;
         for (int i = 0; i < amount; i++) {
-            result += Math.pow(fac, i);
+            result = result.add(fac.pow(i));
+
         }
-        return result * c;
+        return result.multiply(c);
     }
 
-    public double getNPS() {
+    public BigDecimal getNPS() {
         return gain;
+    }
+
+    public void recalculateUpgradeButtonText() {
+        upgradeButtonText = String.format("%,dx Upgrade: %s Nicolas",
+                presenter.getUpgradeFactor(), lf.formatBigNumber(calculateExp(cost, costMultiplier, presenter.getUpgradeFactor())));
     }
 }

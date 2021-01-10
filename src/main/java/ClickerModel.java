@@ -1,20 +1,22 @@
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 public class ClickerModel {
 
-    private double nicolas;
+    private BigDecimal nicolas;
     private final ArrayList<UpgradePanel> upgradePanels;
 
 
     public ClickerModel() {
         upgradePanels = new ArrayList<>();
+        nicolas = BigDecimal.ZERO;
     }
 
-    public double getNicolas() {
+    public BigDecimal getNicolas() {
         return nicolas;
     }
 
-    public void setNicolas(double nicolas) {
+    public void setNicolas(BigDecimal nicolas) {
         this.nicolas = nicolas;
     }
 
@@ -26,11 +28,27 @@ public class ClickerModel {
         upgradePanels.forEach(UpgradePanel::refresh);
     }
 
-    public double getNPS() {
-        double nps = 0;
+    public BigDecimal getNPS() {
+        BigDecimal nps = BigDecimal.ZERO;
         for(UpgradePanel p : upgradePanels){
-            nps += p.getNPS();
+            nps = nps.add(p.getNPS());
         }
         return nps;
+    }
+
+    public void addNicolas(long value) {
+        addNicolas(BigDecimal.valueOf(value));
+    }
+
+    public void addNicolas(BigDecimal value){
+        nicolas = nicolas.add(value);
+    }
+
+    public void removeNicolas(BigDecimal amount) {
+        nicolas = nicolas.subtract(amount);
+    }
+
+    public ArrayList<UpgradePanel> getUpgradePanels() {
+        return upgradePanels;
     }
 }

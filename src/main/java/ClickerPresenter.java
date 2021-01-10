@@ -1,13 +1,16 @@
 import javax.swing.*;
+import java.math.BigDecimal;
 
 public class ClickerPresenter {
 
     public static final int TARGET_FPS = 30;
 
+    public static final int MAX_UPGRADE_FACTOR = 100000;
+
     private final ClickerView clickerView;
     private final ClickerModel clickerModel;
 
-    private double upgradeFactor = 1;
+    private int upgradeFactor = 1;
 
     LargeFormatter formatter = new LargeFormatter();
 
@@ -25,7 +28,7 @@ public class ClickerPresenter {
 
         addPanel(new UpgradePanel("Debugger", 1, 1, 1000000000, this));
 
-
+        clickerModel.getUpgradePanels().forEach(UpgradePanel::recalculateUpgradeButtonText);
         Timer loop = new Timer(1000 / TARGET_FPS, e -> refresh());
         loop.start();
     }
@@ -37,7 +40,7 @@ public class ClickerPresenter {
 
 
     public void nicolasButtonClick() {
-        clickerModel.setNicolas(clickerModel.getNicolas() + 1);
+        clickerModel.addNicolas(1);
     }
 
     private void refresh() {
@@ -46,27 +49,32 @@ public class ClickerPresenter {
         clickerModel.refresh();
     }
 
-    public void removeNicolas(double amount) {
-        clickerModel.setNicolas(clickerModel.getNicolas() - amount);
+    public void removeNicolas(BigDecimal amount) {
+        clickerModel.removeNicolas(amount);
     }
 
-    public double getNicolas() {
+    public BigDecimal getNicolas() {
         return clickerModel.getNicolas();
     }
 
-    public void addNicolas(double gain) {
-        clickerModel.setNicolas(clickerModel.getNicolas() + gain);
+    public void addNicolas(long value) {
+        addNicolas(BigDecimal.valueOf(value));
+    }
+
+    public void addNicolas(BigDecimal gain) {
+        clickerModel.addNicolas(gain);
     }
 
     public String changeFactor() {
         upgradeFactor *= 10;
-        if (upgradeFactor > 1000) {
+        if (upgradeFactor > MAX_UPGRADE_FACTOR) {
             upgradeFactor = 1;
         }
-        return String.format("%,.0fx", upgradeFactor);
+        clickerModel.getUpgradePanels().forEach(UpgradePanel::recalculateUpgradeButtonText);
+        return String.format("%,dx", upgradeFactor);
     }
 
-    public double getUpgradeFactor() {
+    public int getUpgradeFactor() {
         return upgradeFactor;
     }
 

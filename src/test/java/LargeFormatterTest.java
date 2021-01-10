@@ -16,27 +16,27 @@ class LargeFormatterTest {
     void tinyNumberTest(){
         double n = 0.1;
         String s = "0.10";
-        assertEquals(s, lf.formatBigNumber(n));
+        assertEquals(s, lf.formatDouble(n));
     }
 
     @Test
     void smallNumberTest(){
         double n = 10;
         String s = "10";
-        assertEquals(s, lf.formatBigNumber(n));
+        assertEquals(s, lf.formatDouble(n));
     }
 
     @Test
     void kTest(){
         double n = 1000;
         String s = "1k";
-        assertEquals(s, lf.formatBigNumber(n));
+        assertEquals(s, lf.formatDouble(n));
     }
 
     @Test
     void mTest(){
         double n = 10230000;
         String s = "10.23M";
-        assertEquals(s, lf.formatBigNumber(n));
+        assertEquals(s, lf.formatDouble(n));
     }
 }
