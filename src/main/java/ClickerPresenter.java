@@ -1,5 +1,4 @@
 import javax.swing.*;
-import java.util.ArrayList;
 
 public class ClickerPresenter {
 
@@ -7,51 +6,35 @@ public class ClickerPresenter {
 
     private final ClickerView clickerView;
     private final ClickerModel clickerModel;
-    private final ArrayList<UpgradePanel> upgradePanels;
+
+    private double upgradeFactor = 1;
 
     LargeFormatter formatter = new LargeFormatter();
 
-    private final Timer loop;
-
     public ClickerPresenter(ClickerView clickerView) {
+        this.clickerModel = new ClickerModel();
         this.clickerView = clickerView;
         this.clickerView.setClickerPresenter(this);
 
-        UpgradePanel illusion = new UpgradePanel("Illision", 10, 1.05, 0.1, this);
-        UpgradePanel cloneMachine = new UpgradePanel("Klonmaschine", 100, 1.1, 1, this);
-        UpgradePanel mysteriousCave = new UpgradePanel("Mysteriöse Höhle", 500, 1.1, 10, this);
-        UpgradePanel factory = new UpgradePanel("Massenfertigungsanstalt", 3000, 1.1, 150, this);
-        UpgradePanel herblingen = new UpgradePanel("Herblingen", 100000, 1.1, 6969, this);
-        UpgradePanel sihlcity = new UpgradePanel("Sihlcity", 1000000, 1.1, 50000, this);
+        addPanel(new UpgradePanel("Illision", 10, 1.05, 0.1, this));
+        addPanel(new UpgradePanel("Klonmaschine", 100, 1.1, 1, this));
+        addPanel(new UpgradePanel("Mysteriöse Höhle", 500, 1.1, 10, this));
+        addPanel(new UpgradePanel("Massenfertigungsanstalt", 3000, 1.1, 150, this));
+        addPanel(new UpgradePanel("Herblingen", 100000, 1.1, 6969, this));
+        addPanel(new UpgradePanel("Sihlcity", 1000000, 1.1, 50000, this));
+
+        addPanel(new UpgradePanel("Debugger", 1, 1, 1000000000, this));
 
 
-        UpgradePanel debugger = new UpgradePanel("Debugger", 1, 1, 1000000000, this);
-        clickerView.addUpgrade(illusion);
-        clickerView.addUpgrade(cloneMachine);
-        clickerView.addUpgrade(mysteriousCave);
-        clickerView.addUpgrade(factory);
-        clickerView.addUpgrade(herblingen);
-        clickerView.addUpgrade(sihlcity);
-        clickerView.addUpgrade(debugger);
-
-        upgradePanels = new ArrayList<>();
-        upgradePanels.add(illusion);
-        upgradePanels.add(cloneMachine);
-        upgradePanels.add(mysteriousCave);
-        upgradePanels.add(factory);
-        upgradePanels.add(herblingen);
-        upgradePanels.add(sihlcity);
-        upgradePanels.add(debugger);
-
-        clickerModel = new ClickerModel();
-
-        loop = new Timer(1000 / TARGET_FPS, e -> refresh());
+        Timer loop = new Timer(1000 / TARGET_FPS, e -> refresh());
         loop.start();
     }
 
-    public static void main(String[] args) {
-        new ClickerPresenter(new ClickerView());
+    private void addPanel(UpgradePanel panel) {
+        clickerModel.addUpgrade(panel);
+        clickerView.addUpgrade(panel);
     }
+
 
     public void nicolasButtonClick() {
         clickerModel.setNicolas(clickerModel.getNicolas() + 1);
@@ -59,7 +42,8 @@ public class ClickerPresenter {
 
     private void refresh() {
         clickerView.setNicolasAmount(formatter.formatBigNumber(clickerModel.getNicolas()) + " Nicolas");
-        upgradePanels.forEach(UpgradePanel::refresh);
+        clickerView.setNPSAmount(formatter.formatBigNumber(clickerModel.getNPS()) + " Nicolas per Second");
+        clickerModel.refresh();
     }
 
     public void removeNicolas(double amount) {
@@ -72,5 +56,21 @@ public class ClickerPresenter {
 
     public void addNicolas(double gain) {
         clickerModel.setNicolas(clickerModel.getNicolas() + gain);
+    }
+
+    public String changeFactor() {
+        upgradeFactor *= 10;
+        if (upgradeFactor > 1000) {
+            upgradeFactor = 1;
+        }
+        return String.format("%,.0fx", upgradeFactor);
+    }
+
+    public double getUpgradeFactor() {
+        return upgradeFactor;
+    }
+
+    public static void main(String[] args) {
+        new ClickerPresenter(new ClickerView());
     }
 }

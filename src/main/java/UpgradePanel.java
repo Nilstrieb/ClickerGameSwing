@@ -8,8 +8,6 @@ public class UpgradePanel extends JPanel {
     private JLabel nameLabel;
     private JLabel levelLabel;
     private JLabel gainLabel;
-    private JButton x10Button;
-    private JButton x100Button;
 
     private String name;
 
@@ -37,34 +35,20 @@ public class UpgradePanel extends JPanel {
 
         this.nameLabel.setText(name);
 
-        upgradeButton.addActionListener(e -> upgrade(1));
-        x10Button.addActionListener(e -> upgrade(10));
-        x100Button.addActionListener(e -> upgrade(100));
+        upgradeButton.addActionListener(e -> upgrade(presenter.getUpgradeFactor()));
     }
 
-    public void upgrade(int amount) {
+    public void upgrade(double amount) {
 
         presenter.removeNicolas(calculateExp(cost, costMultiplier, amount));
         gain += baseGain * amount;
         level += amount;
 
         cost *= Math.pow(costMultiplier, amount);
-
-        System.err.println(calculateExp(cost, costMultiplier, amount));
-/*
-        for (int i = 0; i < amount; i++) {
-            presenter.removeNicolas(cost);
-            gain += baseGain;
-
-            cost = cost * costMultiplier;
-            level++;
-        }*/
     }
 
     public void refresh() {
-        upgradeButton.setEnabled(presenter.getNicolas() >= cost);
-        x10Button.setEnabled(presenter.getNicolas() >= calculateExp(cost, costMultiplier, 10));
-        x100Button.setEnabled(presenter.getNicolas() >= calculateExp(cost, costMultiplier, 100));
+        upgradeButton.setEnabled(presenter.getNicolas() >= calculateExp(cost, costMultiplier, presenter.getUpgradeFactor()));
 
         //should nicolas be added?
         long currentTime = System.currentTimeMillis();
@@ -80,9 +64,8 @@ public class UpgradePanel extends JPanel {
 
 
             if (timePerNicolas < frameDeltaTime) {
-                System.out.printf(" FN");
                 double missedNicolas = frameDeltaTime / timePerNicolas;
-                System.out.printf(" mn=%.2f gain=%.2f add=%.2f", missedNicolas, gain, missedNicolas);
+                System.out.printf(" FN mn=%.2f gain=%.2f add=%.2f", missedNicolas, gain, missedNicolas);
                 presenter.addNicolas(missedNicolas);
             } else {
                 presenter.addNicolas(1);
@@ -95,10 +78,8 @@ public class UpgradePanel extends JPanel {
         levelLabel.setText("Level: " + level);
         gainLabel.setText(lf.formatBigNumber(gain) + " Nicolas");
 
-        upgradeButton.setText("Upgrade:  " + lf.formatBigNumber(cost) + " Nicolas");
-        x10Button.setText("x10:  " + lf.formatBigNumber(calculateExp(cost, costMultiplier, 10)) + " Nicolas");
-        x100Button.setText("x100:  " + lf.formatBigNumber(calculateExp(cost, costMultiplier, 100)) + " Nicolas");
-
+        upgradeButton.setText(String.format("%,.0fx Upgrade: %s Nicolas",
+                presenter.getUpgradeFactor(), lf.formatBigNumber(calculateExp(cost, costMultiplier, presenter.getUpgradeFactor()))));
     }
 
     private double calculateExp(double c, double fac, double amount) {
@@ -110,5 +91,9 @@ public class UpgradePanel extends JPanel {
             result += Math.pow(fac, i);
         }
         return result * c;
+    }
+
+    public double getNPS() {
+        return gain;
     }
 }
