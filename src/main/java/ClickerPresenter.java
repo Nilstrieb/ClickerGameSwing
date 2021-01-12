@@ -1,3 +1,8 @@
+import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.theme.HighContrastLightTheme;
+import com.github.weisj.darklaf.theme.OneDarkTheme;
+import com.github.weisj.darklaf.theme.SolarizedLightTheme;
+
 import javax.swing.*;
 import java.math.BigDecimal;
 
@@ -25,8 +30,12 @@ public class ClickerPresenter {
         addPanel(new UpgradePanel("Massenfertigungsanstalt", 3000, 1.1, 150, this));
         addPanel(new UpgradePanel("Herblingen", 100000, 1.1, 6969, this));
         addPanel(new UpgradePanel("Sihlcity", 1000000, 1.1, 50000, this));
+        addPanel(new UpgradePanel("Nicolas' Mutter", 100000000, 1.1, 950000, this));
+        addPanel(new UpgradePanel("Nicolas Portal", new BigDecimal("1E+10"), 1.1, new BigDecimal("5E+7"), this));
+        addPanel(new UpgradePanel("Nicolas-Nicolas", new BigDecimal("69E+11"), 1.1, new BigDecimal("3E+8"), this));
+        addPanel(new UpgradePanel("Nicolas Singularität", new BigDecimal("1E+14"), 1.1, new BigDecimal("1E+69"), this));
 
-        addPanel(new UpgradePanel("Debugger", 1, 1, 1000000000, this));
+        //addPanel(new UpgradePanel("Debugger", 1, 1, 1000000000, this));
 
         clickerModel.getUpgradePanels().forEach(UpgradePanel::recalculateUpgradeButtonText);
         Timer loop = new Timer(1000 / TARGET_FPS, e -> refresh());
@@ -79,6 +88,7 @@ public class ClickerPresenter {
     }
 
     public static void main(String[] args) {
+        LafManager.install(new OneDarkTheme());
         new ClickerPresenter(new ClickerView());
     }
 }

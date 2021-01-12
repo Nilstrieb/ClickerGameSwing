@@ -18,7 +18,7 @@ public class UpgradePanel extends JPanel {
     private String name;
 
     private final BigDecimal costMultiplier;
-    private final double baseGain;
+    private final BigDecimal baseGain;
 
     private BigDecimal cost;
     private BigDecimal gain = BigDecimal.ZERO;
@@ -32,11 +32,15 @@ public class UpgradePanel extends JPanel {
 
     private BigDecimal upgradeCost = BigDecimal.ZERO;
 
-    public UpgradePanel(String name, double baseCost, double costMultiplier, double baseGain, ClickerPresenter presenter) {
+    public UpgradePanel(String name, long baseCost, double costMultiplier, double baseGain, ClickerPresenter presenter) {
+        this(name, BigDecimal.valueOf(baseCost), costMultiplier, BigDecimal.valueOf(baseGain), presenter);
+    }
+
+    public UpgradePanel(String name, BigDecimal baseCost, double costMultiplier, BigDecimal baseGain, ClickerPresenter presenter) {
         add(mainPanel);
 
         this.name = name;
-        this.cost = new BigDecimal(baseCost);
+        this.cost = baseCost;
         this.costMultiplier = BigDecimal.valueOf(costMultiplier);
         this.baseGain = baseGain;
         this.presenter = presenter;
@@ -49,7 +53,7 @@ public class UpgradePanel extends JPanel {
     public void upgrade(int amount) {
 
         presenter.removeNicolas(calculateExp(cost, costMultiplier, amount));
-        gain = gain.add(new BigDecimal(baseGain * amount));
+        gain = gain.add(baseGain.multiply(new BigDecimal(amount)));
         level += amount;
 
         cost = cost.multiply(costMultiplier.pow(amount));
